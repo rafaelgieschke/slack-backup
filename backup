@@ -1,0 +1,46 @@
+#!/bin/sh
+
+cd -- "$(dirname -- "$(realpath -- "$0")")"
+
+if ! test "$1"; then
+  set -- all
+fi
+
+(
+cd slack-chat-backup
+
+for v in files messages meta; do
+  mkdir -p "../data/$v"
+  ln -sf "../data/$v"
+done
+
+for v in cookies log; do
+  mkdir -p "../tmp/$v"
+  ln -sf "../tmp/$v"
+done
+
+cat config_sample.sh > ../tmp/config
+
+# Firefox > Web Developer Tools > Network > Filter URLs: "client.boot"
+# > Save All As HAR: "client.boot.har"
+jq -r '@sh "
+team_name=\(.log.entries[0].response.content.text | fromjson | .team.domain)
+team_id=\(.log.entries[0].response.content.text | fromjson | .team.id)
+cookie=\(.log.entries[0].request.headers[] | select(.name == "Cookie").value)
+token=\(.log.entries[0].request.postData.text | match("xoxc-.+").string | rtrimstr("\r"))
+"' ../client.boot.har >> ../tmp/config
+
+if ! ./run.sh "$@" --config "../tmp/config"; then
+  rm ../tmp/cookies/*
+  ./run.sh "$@" --config "../tmp/config"
+fi
+
+for v in files messages meta cookies log; do
+  rm "$v"
+done
+)
+
+git init data
+cd data
+git add .
+git commit -m Update
