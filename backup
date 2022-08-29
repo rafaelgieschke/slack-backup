@@ -2,6 +2,8 @@
 
 cd -- "$(dirname -- "$(realpath -- "$0")")"
 
+git submodule update --init
+
 if ! test "$1"; then
   set -- all
 fi
