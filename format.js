@@ -28,6 +28,7 @@ const readJson = async (path) => JSON.parse(await Deno.readTextFile(path));
 const filterUnique = (array, fn, seen = new Set()) =>
   array.filter((...a) => {
     const v2 = fn(...a);
+    if (v2 == undefined) return true;
     if (seen.has(v2)) return false;
     seen.add(v2);
     return true;
