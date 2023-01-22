@@ -1,0 +1,21 @@
+#!/bin/sh -eu
+cd -- "$(dirname -- "$(realpath -- "$0")")"
+
+users="$(jq -r '[
+  (input_filename | split("/") | .[-1] | split(".") | .[0]),
+  .results[].name
+  ]| @tsv' data/meta/*/users/*.json)"
+
+jq -r '(
+  ("data/messages/" + .team.domain) as $team |
+  (.channels[] | [$team + "/channels/" + .id, .name]),
+  (.mpims[] | [$team + "/mpims/" + .id, .name]),
+  (.ims[] | [$team + "/ims/" + .id, .user])
+  ) | @tsv' data/meta/bwfla/boot.json |
+  while read -r path channel; do
+    if user="$(printf '%s' "$users" | grep -F "$channel")"; then
+      printf '%s\t%s\n' "$path" "$user"
+    else
+      printf '%s\t%s\n' "$path" "$channel"
+    fi
+  done
