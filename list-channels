@@ -11,7 +11,7 @@ jq -r '(
   (.channels[] | [$team + "/channels/" + .id, .name]),
   (.mpims[] | [$team + "/mpims/" + .id, .name]),
   (.ims[] | [$team + "/ims/" + .id, .user])
-  ) | @tsv' data/meta/bwfla/boot.json |
+  ) | @tsv' data/meta/*/boot.json |
   while read -r path channel; do
     if user="$(printf '%s' "$users" | grep -F "$channel")"; then
       printf '%s\t%s\n' "$path" "$user"
