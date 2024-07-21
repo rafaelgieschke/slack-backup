@@ -1,0 +1,30 @@
+#!/bin/sh
+
+. tmp/config
+
+make_request() {
+  curl \
+    --cookie "$tmp_dir/cookies/${team_name}.jar" \
+    --header "Accept-Language: en-US,en;q=0.5" \
+    --header "Accept: */*" \
+    --header "Origin: https://app.slack.com" \
+    --header "User-Agent: ${USER_AGENT}" \
+    "${@}"
+}
+
+files_dir="$(printf %s data/files/*/)"
+
+grep -hEro '"url_private_download":"[^"]+"' data/messages | cut -d: -f2-3 | tr -d '"\\' | while read -r url; do
+  id="${url#*/files-???/}"
+  id="${id%%/*}"
+  dir="$files_dir/$id"
+  if ! test -e "$dir"; then
+    mkdir -p "$dir"
+    (
+      set -x
+      tmp_dir="$(pwd)/tmp"
+      cd -- "$dir"
+      make_request -LO -- "$url"
+    )
+  fi
+done
