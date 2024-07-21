@@ -45,7 +45,9 @@ token=\(.log.entries[0].request.postData.text | match("xoxc-.+").string | rtrims
 git init data
 cd data
 find -name latest.json -exec sh -c 'cp -- "$0" "$(dirname -- "$0")/$(jq -r .messages[0].ts "$0")0.json"' {} \;
+cd ..
 for v in data/messages/*/*/*; do ./get-threads.js "$v"; done
 ./get-files
+cd data
 git add .
 git commit -m Update
