@@ -104,8 +104,12 @@ const channel = cwd.replace(/.*\//, "");
 
 for (const thread_ts of new Set(threads)) {
   console.log(thread_ts);
-  const thread = await client.getThread(channel, thread_ts);
-  if (thread) {
-    await writeText(`${thread_ts}.thread.json`, JSON.stringify(thread));
+  try {
+    const thread = await client.getThread(channel, thread_ts);
+    if (thread) {
+      await writeText(`${thread_ts}.thread.json`, JSON.stringify(thread));
+    }
+  } catch (e) {
+    console.error(e);
   }
 }
