@@ -63,6 +63,13 @@ const tryOr = async (fn, defaultVal) => {
 
 const getMessages = (object) => object.messages ?? object;
 
+const formatMessage = (msg) =>
+  msg
+    ? `${msg.text}${msg.files?.length > 0 ? " " : ""}${
+      msg.files?.map((v) => v.url_private).join(" ")
+    }`
+    : "";
+
 const msgs = await Promise.all(
   filterUnique(
     (
@@ -93,7 +100,7 @@ const msgs = await Promise.all(
           : ""
       }${new Date(Number(v?.ts) * 1000).toJSON()}, ${await getUser(
         v?.user,
-      )}: ${v?.text}`,
+      )}: ${formatMessage(v)}`,
   ),
 );
 
