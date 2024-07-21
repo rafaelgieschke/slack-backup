@@ -9,6 +9,7 @@ users="$(jq -r '[
 jq -r '(
   ("data/messages/" + .team.domain) as $team |
   (.channels[] | [$team + "/channels/" + .id, .name]),
+  (.channels[] | [$team + "/mpims/" + .id, .name]),
   (.mpims[] | [$team + "/mpims/" + .id, .name]),
   (.ims[] | [$team + "/ims/" + .id, .user])
   ) | @tsv' data/meta/bwfla/boot.json |
