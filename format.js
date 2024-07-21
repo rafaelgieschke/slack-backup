@@ -7,7 +7,9 @@ const [dir] = Deno.args;
 if (!dir) {
   throw new TypeError(
     `Usage: ${
-      import.meta.url.split("/").at(-1)
+      import.meta.url
+        .split("/")
+        .at(-1)
     } data/messages/path/to/single/directory`,
   );
 }
@@ -71,7 +73,7 @@ const msgs = await Promise.all(
           .map((v) => v.name)
           .filter((v) => v !== "threads")
           .sort()
-          .map(async (name) => getMessages(await readJson(`${dir}/${name}`)))
+          .map(async (name) => getMessages(await readJson(`${dir}/${name}`))),
       )
     )
       .flat(1)
@@ -80,19 +82,19 @@ const msgs = await Promise.all(
           (a.thread_ts &&
             b.thread_ts &&
             compare(Number(a?.thread_ts), Number(b?.thread_ts))) ||
-          compare(Number(a?.ts), Number(b?.ts))
+          compare(Number(a?.ts), Number(b?.ts)),
       ),
-    (v) => v?.client_msg_id
+    (v) => v?.client_msg_id,
   ).map(
     async (v) =>
       `${
         v?.thread_ts
           ? `[${new Date(Number(v.thread_ts) * 1000).toJSON()}] `
           : ""
-      }${new Date(Number(v?.ts) * 1000).toJSON()}, ${await getUser(v?.user)}: ${
-        v?.text
-      }`
-  )
+      }${new Date(Number(v?.ts) * 1000).toJSON()}, ${await getUser(
+        v?.user,
+      )}: ${v?.text}`,
+  ),
 );
 
 console.log(msgs.join("\n"));

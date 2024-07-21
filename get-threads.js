@@ -18,7 +18,7 @@ const cwd = Deno.cwd();
 
 const stdout = async (cmd, ...args) =>
   new TextDecoder().decode(
-    (await new Deno.Command(cmd, { args }).output()).stdout
+    (await new Deno.Command(cmd, { args }).output()).stdout,
   );
 
 const writeText = async (path, text) => {
@@ -44,7 +44,7 @@ class Client {
         team_id: this.team_id,
         limit: 1000,
         ...args,
-      })
+      }),
     );
     return await (
       await fetch(url, {
@@ -76,7 +76,7 @@ const team_name = JSON.parse(boot.log.entries[0].response.content.text).team
   .domain;
 const team_id = JSON.parse(boot.log.entries[0].response.content.text).team.id;
 const cookie = boot.log.entries[0].request.headers.find(
-  (v) => v.name == "Cookie"
+  (v) => v.name == "Cookie",
 )?.value;
 const token = boot.log.entries[0].request.postData.text
   .match(/xoxc-.+/)?.[0]
@@ -105,6 +105,7 @@ const channel = cwd.replace(/.*\//, "");
 for (const thread_ts of new Set(threads)) {
   console.log(thread_ts);
   const thread = await client.getThread(channel, thread_ts);
-  if (thread)
+  if (thread) {
     await writeText(`${thread_ts}.thread.json`, JSON.stringify(thread));
+  }
 }
