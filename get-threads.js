@@ -1,5 +1,5 @@
 #!/bin/sh
-//bin/sh -c :; exec deno run -A "$0" "@"
+//bin/sh -c :; exec deno run -A "$0" "$@"
 
 const $$ = (v) => (
   console.dir(v, { depth: Infinity, strAbbreviateSize: Infinity }), v
@@ -13,6 +13,7 @@ Object.defineProperty(Object.prototype, "$$", {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+if (Deno.args[0]) Deno.chdir(Deno.args[0]);
 const cwd = Deno.cwd();
 
 const stdout = async (cmd, ...args) =>
@@ -94,13 +95,16 @@ console.log(
 const threads = (await stdout("grep", "-hEro", '"thread_ts":"[^"]*"'))
   .split("\n")
   .filter((v) => v)
-  .map((v) => JSON.parse(`{${v}}`));
+  .map((v) => JSON.parse(`{${v}}`))
+  .map(({ thread_ts }) => thread_ts);
 
 const channel = cwd.replace(/.*\//, "");
 
-await Deno.mkdir("threads");
+// await Deno.mkdir("threads");
 
-for (const { thread_ts } of threads) {
+for (const thread_ts of new Set(threads)) {
+  console.log(thread_ts);
   const thread = await client.getThread(channel, thread_ts);
-  writeText(`threads/${thread_ts}.json`, JSON.stringify(thread));
+  if (thread)
+    await writeText(`${thread_ts}.thread.json`, JSON.stringify(thread));
 }

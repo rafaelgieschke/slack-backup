@@ -36,8 +36,12 @@ const filterUnique = (array, fn, seen = new Set()) =>
 
 const getUser = async (user) => {
   if (!user) return "UNKNOWN";
-  return (await readJson(`data/meta/${project}/users/${user}.json`)).results[0]
-    .name;
+  try {
+    return (await readJson(`data/meta/${project}/users/${user}.json`))
+      .results[0].name;
+  } catch {
+    return `NOT FOUND (${user})`;
+  }
 };
 
 Object.defineProperty(Object.prototype, "d", {
@@ -47,6 +51,16 @@ Object.defineProperty(Object.prototype, "d", {
   },
 });
 
+const tryOr = async (fn, defaultVal) => {
+  try {
+    return await fn();
+  } catch {
+    return defaultVal;
+  }
+};
+
+const getMessages = (object) => object.messages ?? object;
+
 const msgs = await Promise.all(
   filterUnique(
     (
@@ -55,19 +69,30 @@ const msgs = await Promise.all(
           await fromAsync(Deno.readDir(`${dir}`))
         )
           .map((v) => v.name)
+          .filter((v) => v !== "threads")
           .sort()
-          .map(async (name) => (await readJson(`${dir}/${name}`)).messages),
+          .map(async (name) => getMessages(await readJson(`${dir}/${name}`)))
       )
     )
       .flat(1)
-      .sort((a, b) => compare(Number(a.ts), Number(b.ts))),
-    (v) => v.client_msg_id,
+      .sort(
+        (a, b) =>
+          (a.thread_ts &&
+            b.thread_ts &&
+            compare(Number(a?.thread_ts), Number(b?.thread_ts))) ||
+          compare(Number(a?.ts), Number(b?.ts))
+      ),
+    (v) => v?.client_msg_id
   ).map(
     async (v) =>
-      `${new Date(Number(v.ts) * 1000).toJSON()}, ${await getUser(
-        v?.user,
-      )}: ${v.text}`,
-  ),
+      `${
+        v?.thread_ts
+          ? `[${new Date(Number(v.thread_ts) * 1000).toJSON()}] `
+          : ""
+      }${new Date(Number(v?.ts) * 1000).toJSON()}, ${await getUser(v?.user)}: ${
+        v?.text
+      }`
+  )
 );
 
 console.log(msgs.join("\n"));
