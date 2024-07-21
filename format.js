@@ -66,7 +66,7 @@ const getMessages = (object) => object.messages ?? object;
 const formatMessage = (msg) =>
   msg
     ? `${msg.text}${msg.files?.length > 0 ? " " : ""}${
-      msg.files?.map((v) => v.url_private).join(" ")
+      msg.files?.map((v) => v.url_private).join(" ") ?? ""
     }`
     : "";
 
